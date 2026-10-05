@@ -13,6 +13,8 @@ Tested on Windows with ComfyUI 0.37.1, frontend 1.52.7, Python 3.13.12, PyTorch 
 | Full graph | Both local buttons ran in a connected 17-node H3 generation workflow. Only LoadVideo and VideoControlStudio were submitted. A test did not persist one-frame mode into the next full run. |
 | Playback regression | Tested with delayed frame requests and animation timestamps preceding the start event. Playback continued without invalid frame requests. |
 | Layout | Resizing and language changes preserved all controls without internal scrolling. Control output stayed English in Korean mode. |
+| Grouped settings | Enabled modes revealed their own groups; hidden options retained values. All groups fit at the enforced minimum size in English and Korean. Playback and clean node screenshots were checked again. |
+| README comparison | All three extractors processed the same three-second segment into 72 frames at 24 FPS. The silent comparison MP4 decodes to 72 frames; the inline GIF has 36 frames totaling exactly three seconds. |
 | Persistence | Language, settings and presets survived workflow reload. |
 | H3 integration | Exported Pose frames drove a 124-frame generation. A separate run connected control_frames directly to H3 Fun ControlNet with image-reference conditioning and generated 73 frames at 704 × 384. |
 
@@ -35,4 +37,4 @@ The 124-frame H3 check used 512 × 288, an 8-step Turbo LoRA and Fun ControlNet 
 - Canny includes background edges as well as the subject.
 - Tests cover short clips. Long-clip memory use and broader hardware/extension compatibility remain unverified.
 
-Initial motion tests used the public [ComfyUI dancer sample](https://github.com/Comfy-Org/workflow_templates/blob/main/input/dancer_field_pose.mp4), which is not bundled. Documentation images use an original geometric test animation. Model weights and test media are not included.
+Initial motion tests used the public [ComfyUI dancer sample](https://github.com/Comfy-Org/workflow_templates/blob/main/input/dancer_field_pose.mp4), which is not bundled. Node screenshots use an original geometric test animation. The README comparison GIF/MP4 contains extracted maps from a user-provided clip. Source footage, audio, other test media and model weights are not included.

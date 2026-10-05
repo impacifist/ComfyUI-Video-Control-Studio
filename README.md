@@ -4,6 +4,12 @@
 
 Prepare control videos inside ComfyUI: select Pose, Depth or Canny, extract a short segment, then inspect the same frame with a draggable A/B divider. English is the default; choose **한국어** in the node to switch languages.
 
+![Synchronized three-second Pose, Depth and Canny comparison](docs/control-comparison.gif)
+
+**One clip, three control maps.** Left: Pose (SDPose), center: Depth (DA3), right: Canny. All three use the same three-second segment. [Watch or download the 24 FPS comparison video](docs/control-comparison.mp4). The inline preview loops at 12 FPS; extraction and MP4 playback use 24 FPS.
+
+**Works with MiniMax H3 Fun ControlNet.** Connect `control_frames` (IMAGE) to **Apply MiniMax H3 Fun ControlNet → control_video** (IMAGE), then choose Pose, Depth or Canny in **Control output**. See the [ready-to-load workflow](examples/h3-pose-controlnet-en.json) and [official node input reference](https://github.com/Comfy-Org/embedded-docs/blob/main/comfyui_embedded_docs/docs/MiniMaxH3FunControlNetApply/en.md). Other Fun ControlNet models require a compatible control type and matching generation settings.
+
 ![Original and Canny comparison](docs/studio-en.png)
 
 Use it to inspect motion references before sampling, compare preprocessing settings or export a control video for another workflow. Processing uses ComfyUI's native preprocessors and runs locally.
@@ -62,7 +68,7 @@ For a complete generation example, use the [H3 Pose ControlNet workflow](example
 | FPS | `0` preserves source FPS. Other values resample by dropping/repeating frames, without motion interpolation. |
 | Maximum side | Resize with aspect ratio preserved and even dimensions. |
 | Set start/end here | Select a smaller segment from the current preview; extract again to apply. |
-| Advanced | Pose hands/face/feet and confidence; Canny thresholds; depth inversion; model selection and inference batch size. |
+| Advanced | Video settings stay together. Only enabled modes show their own settings: Pose model, body parts and confidence; Depth model and inversion; Canny thresholds. Hidden settings retain their values. |
 | Presets | Save extraction settings by name inside the workflow. Model choices are stored as node inputs, separately from presets. |
 | Layout / language | Minimum size keeps all controls visible without internal scrolling. Advanced settings start expanded. Control output and its mode names remain English in both languages. |
 | `control_frames` | Clean selected control maps as an IMAGE batch. |
@@ -87,3 +93,5 @@ For H3, use 24 FPS. Its generated frame count follows `17n + 5` (for example, 12
 See [validation notes](docs/VALIDATION.md). Unit checks: `python -m unittest discover -s tests -v`.
 
 MIT for this package. Native ComfyUI implementations and model weights retain their respective licenses. Built on [ComfyUI](https://github.com/Comfy-Org/ComfyUI), [SDPose](https://huggingface.co/Comfy-Org/SDPose) and [Depth Anything 3](https://github.com/ByteDance-Seed/Depth-Anything-3).
+
+The comparison GIF/MP4 demonstrates extracted maps from a user-provided clip; source footage and audio are not bundled. The package's MIT license does not grant rights to the underlying footage.

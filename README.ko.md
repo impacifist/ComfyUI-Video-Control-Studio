@@ -4,6 +4,12 @@
 
 비디오에서 Pose·Depth·Canny 참조 영상을 만들고, 같은 프레임을 세로 비교선으로 확인하는 ComfyUI 노드입니다. 기본 UI는 영어이며 노드 오른쪽 위에서 **한국어**로 바꿀 수 있습니다.
 
+![동일한 3초 구간의 Pose·Depth·Canny 비교](docs/control-comparison.gif)
+
+**하나의 영상에서 세 가지 제어 영상을 만듭니다.** 왼쪽은 Pose(SDPose), 가운데는 Depth(DA3), 오른쪽은 Canny입니다. 모두 같은 3초 구간을 사용합니다. [24 FPS 비교 영상 보기·다운로드](docs/control-comparison.mp4). 위 미리보기는 12 FPS로 반복 재생하며, 실제 추출과 MP4는 24 FPS입니다.
+
+**MiniMax H3 Fun ControlNet에 연결할 수 있습니다.** `control_frames`(IMAGE)를 **Apply MiniMax H3 Fun ControlNet → control_video**(IMAGE)에 연결하고, **Control output**에서 Pose·Depth·Canny를 선택하세요. [바로 불러올 예제](examples/h3-pose-controlnet-ko.json)와 [공식 노드 입력 안내](https://github.com/Comfy-Org/embedded-docs/blob/main/comfyui_embedded_docs/docs/MiniMaxH3FunControlNetApply/en.md)를 참고하세요. 다른 Fun ControlNet 모델은 지원하는 제어 종류와 생성 설정을 확인해야 합니다.
+
 ![원본과 Canny 비교](docs/studio-ko.png)
 
 생성 전에 움직임 참조를 점검하거나 전처리 설정을 비교하고, 다른 워크플로우용 제어 영상을 저장할 때 사용할 수 있습니다. ComfyUI 기본 전처리 기능을 사용하며 로컬에서 실행됩니다.
@@ -16,7 +22,7 @@
 | Depth | 장면 깊이와 사물의 상대적 배치 제어 | Depth Anything 3 |
 | Canny | 윤곽선·실루엣·장면 구조 제어 | 없음 |
 
-여러 종류를 선택하면 A/B 화면에서 비교할 수 있습니다. **ControlNet 출력**으로 전달할 종류는 하나를 선택하며, 체크한 종류만 계산합니다.
+여러 종류를 선택하면 A/B 화면에서 비교할 수 있습니다. **Control output**으로 전달할 종류는 하나를 선택하며, 체크한 종류만 계산합니다.
 
 ## 설치
 
@@ -54,7 +60,7 @@ Canny는 모델이 필요 없습니다. 모델은 자동 다운로드하지 않�
 - **출력 FPS**: `0`은 원본 유지. 다른 값은 프레임을 생략·반복해 맞추며 보간하지 않습니다.
 - **최대 변 길이**: 비율을 유지하고 가로·세로를 짝수 크기로 맞춥니다.
 - **현재 위치를 시작/끝으로**: 미리보기에서 구간을 고른 후 다시 추출해 적용합니다.
-- **세부 설정**: 손·얼굴·발·포즈 신뢰도, Canny 임계값, Depth 반전, 모델, 추론 배치 크기.
+- **세부 설정**: 영상 설정을 한곳에 모으고, 선택한 추출 방식의 옵션만 표시합니다. Pose는 모델·부위·신뢰도, Depth는 모델·반전, Canny는 두 임계값을 함께 배치합니다. 숨겨진 옵션의 값도 유지됩니다.
 - **프리셋**: 이름을 붙여 추출 설정을 워크플로우 안에 저장합니다. 모델 선택은 노드 입력에 별도로 저장됩니다. 노드 간 공유 라이브러리는 아닙니다.
 - **출력**: `control_frames`는 선택한 제어 맵의 IMAGE 배치, `control_video`는 같은 맵을 담은 무음 VIDEO입니다. `fps`와 `frame_count`도 제공합니다.
 
@@ -72,3 +78,5 @@ H3에는 24 FPS를 사용하세요. 생성 프레임 수는 `17n + 5` 규칙을 
 - ComfyUI 0.37.1 / 프런트엔드 1.52.7에서 검증했습니다. 기본 전처리 노드가 없는 구버전은 지원하지 않습니다. MiniMax H3 영상 생성 자체는 이 노드의 기능이 아닙니다.
 
 [검증 기록](docs/VALIDATION.md) · 패키지 라이선스: MIT. ComfyUI 및 모델은 각자의 라이선스를 따릅니다.
+
+비교 GIF·MP4는 제공된 영상에서 추출한 제어 맵 예시입니다. 원본 영상과 오디오는 포함하지 않으며, 패키지의 MIT 라이선스가 원본 영상에 대한 권리를 부여하지는 않습니다.

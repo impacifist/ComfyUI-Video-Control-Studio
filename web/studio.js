@@ -8,6 +8,8 @@ const words={
  ko:{advanced:'세부 설정',extract:'선택 구간 추출',test:'한 프레임 시험',start:'시작 시간 (초)',duration:'구간 길이 (0 = 나머지)',fps:'출력 FPS (0 = 원본)',max_side:'최대 변 길이',test_time:'구간 내 시험 위치 (초)',hands:'손',face:'얼굴',feet:'발',threshold:'포즈 신뢰도',low:'Canny 낮은 임계값',high:'Canny 높은 임계값',depth_invert:'Depth 반전',batch_size:'추론 배치 크기',output:'Control output',original:'원본',pose:'포즈',depth:'깊이',canny:'윤곽선',empty:'Load Video를 연결하고 추출 종류를 선택하세요.',dirty:'설정이 변경됐습니다. 다시 추출하면 출력에 반영됩니다.',queued:'이 노드와 필요한 입력만 실행 대기 중입니다.',advancedNote:'Pose: 단일 인물 SDPose. Depth: 프레임별 DA3, 구간 전체 명암 범위 공유. 인물 추적·시간축 안정화는 포함하지 않습니다.',previewNote:'A/B 화면은 확인용입니다. 출력은 선택한 추출 결과만 전달합니다. 미리보기 파일은 임시 저장됩니다.',single:'한 프레임 시험 결과 — 전체 제어 영상은 선택 구간 추출을 실행하세요.',play:'재생 / 일시정지',back:'이전 프레임',next:'다음 프레임',split:'비교선 위치',seek:'영상 시간',swap:'A/B 바꾸기',in:'현재 위치를 시작으로',out:'현재 위치를 끝으로',save:'프리셋 저장',presets:'프리셋',presetName:'프리셋 이름',poseModel:'포즈 체크포인트',depthModel:'Depth 체크포인트',failure:'미리보기가 없습니다. 다시 추출하세요.',runError:'노드를 실행할 수 없습니다. 서브그래프 내부에서는 ComfyUI 실행을 사용하세요.',stale:'이전 추출 결과를 표시 중입니다.'}
 };
 const controllers=new WeakMap();
+Object.assign(words.en,{videoSettings:'Video settings',fps:'FPS (0 = source)',max_side:'Resolution (long side)',test_time:'Test position (seconds)',batch_size:'Frames per batch',poseModel:'Model',depthModel:'Model',low:'Low threshold',high:'High threshold',poseParts:'Include',videoHint:'Test position is relative to the selected segment. Use batch size 1 to save memory.',poseHint:'Higher confidence hides uncertain joints.',depthHint:'Near objects are white by default.',cannyHint:'Lower thresholds reveal more edges. Keep Low below High.'});
+Object.assign(words.ko,{videoSettings:'영상 설정',fps:'FPS (0 = 원본)',max_side:'해상도 (긴 변)',test_time:'시험 위치 (초)',batch_size:'동시 처리 프레임',poseModel:'모델',depthModel:'모델',low:'낮은 임계값',high:'높은 임계값',poseParts:'포함할 부위',videoHint:'시험 위치는 선택 구간 기준입니다. 메모리가 부족하면 동시 처리를 1로 설정하세요.',poseHint:'신뢰도를 높이면 불확실한 관절을 숨깁니다.',depthHint:'기본값은 가까운 물체가 흰색입니다.',cannyHint:'값을 낮추면 더 많은 윤곽선을 잡습니다. 낮은 값은 높은 값보다 작아야 합니다.'});
 function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
 function install(node){
  if(controllers.has(node))return;
@@ -47,11 +49,19 @@ function install(node){
  markOut.onclick=()=>{if(!manifest||manifest.test)return;cfg.duration=Math.max(1/manifest.fps,manifest.start+(frame+1)/manifest.fps-cfg.start);reloadFields();write();};
  const outputRow=element('label','row');outputRow.append(label(element('span'),'output'));const output=element('select');output.dataset.setting='output';outputRow.append(output);root.append(outputRow);output.onchange=()=>{cfg.output=output.value;write();};
  const actions=element('div','row');const test=label(element('button'),'test'),extract=label(element('button','primary'),'extract');actions.append(test,extract);root.append(actions);
- const advanced=element('details');advanced.open=true;advanced.append(label(element('summary'),'advanced'));const advFields=element('div','fields');advanced.append(advFields);
- field('fps',advFields,0,120,1);field('max_side',advFields,64,4096,32);field('test_time',advFields,0,86400,.1);field('batch_size',advFields,1,16,1);field('threshold',advFields,0,1,.01);field('low',advFields,.01,.99,.01);field('high',advFields,.01,.99,.01);
- for(const key of ['hands','face','feet','depth_invert']){const l=element('label','row');const input=element('input');input.type='checkbox';inputs[key]=input;input.onchange=()=>{cfg[key]=input.checked;write();};l.append(input,label(element('span'),key));advFields.append(l);}
- for(const[w,key]of [[poseWidget,'poseModel'],[depthWidget,'depthModel']]){const l=element('label','field');l.append(label(element('span'),key));const select=element('select');const values=typeof w.options.values==='function'?w.options.values():w.options.values;for(const value of values||[])select.add(new Option(value,value));select.value=w.value;select.onchange=()=>{w.value=select.value;write();};l.append(select);advFields.append(l);w.vcsSelect=select;}
- advanced.append(label(element('p','note'),'advancedNote'));root.append(advanced);
+ const advanced=element('details');advanced.open=true;advanced.append(label(element('summary'),'advanced'));
+ const modeGroups={};
+ function settingsGroup(key,mode=null){const group=element('section','settings-group');group.dataset.group=mode||'video';const title=element('h4');if(mode){title.textContent=words.en[mode];modeGroups[mode]=group;}else label(title,key);group.append(title);advanced.append(group);return group;}
+ const videoGroup=settingsGroup('videoSettings');const videoFields=element('div','fields');videoGroup.append(videoFields);
+ field('fps',videoFields,0,120,1);field('max_side',videoFields,64,4096,32);field('test_time',videoFields,0,86400,.1);field('batch_size',videoFields,1,16,1);videoGroup.append(label(element('p','note'),'videoHint'));
+ const poseGroup=settingsGroup('pose','pose'),depthGroup=settingsGroup('depth','depth'),cannyGroup=settingsGroup('canny','canny');
+ for(const[w,key,parent]of [[poseWidget,'poseModel',poseGroup],[depthWidget,'depthModel',depthGroup]]){const l=element('label','field model-field');l.append(label(element('span'),key));const select=element('select');const values=typeof w.options.values==='function'?w.options.values():w.options.values;for(const value of values||[])select.add(new Option(value,value));select.value=w.value;select.onchange=()=>{w.value=select.value;write();};l.append(select);parent.append(l);w.vcsSelect=select;}
+ function toggle(key,parent){const l=element('label','toggle');const input=element('input');input.type='checkbox';input.dataset.setting=key;inputs[key]=input;input.onchange=()=>{cfg[key]=input.checked;write();};l.append(input,label(element('span'),key));parent.append(l);}
+ const parts=element('div','row pose-parts');parts.append(label(element('span','parts-label'),'poseParts'));for(const key of ['hands','face','feet'])toggle(key,parts);poseGroup.append(parts);
+ field('threshold',poseGroup,0,1,.01);poseGroup.append(label(element('p','note'),'poseHint'));
+ const depthOptions=element('div','row');toggle('depth_invert',depthOptions);depthGroup.append(depthOptions,label(element('p','note'),'depthHint'));
+ const cannyFields=element('div','fields');cannyGroup.append(cannyFields);field('low',cannyFields,.01,.99,.01);field('high',cannyFields,.01,.99,.01);cannyGroup.append(label(element('p','note'),'cannyHint'));
+ root.append(advanced);
  const presets=element('div','row');const preset=element('select');label(preset,'presets','aria-label');const presetName=element('input','preset-name');presetName.type='text';label(presetName,'presetName','placeholder');const save=label(element('button'),'save');presets.append(preset,presetName,save);root.append(presets);
  const status=element('div','status');status.setAttribute('role','status');root.insertBefore(status,advanced);root.append(label(element('p','note'),'previewNote'));
  const cache=new Map();
@@ -66,7 +76,7 @@ function install(node){
  async function tick(run){if(!playing||disposed||run!==playbackRun)return;const elapsed=Math.max(0,performance.now()-lastTime);const next=(clockFrame+Math.floor(elapsed*manifest.fps/1000))%manifest.count;if(next!==frame){frame=next;await draw();}if(playing&&!disposed&&run===playbackRun)raf=requestAnimationFrame(()=>tick(run));}
  a.onchange=b.onchange=()=>draw();swap.onclick=()=>{const temp=a.value;a.value=b.value;b.value=temp;draw();};
  function write(){storage.value=JSON.stringify(cfg);status.classList.remove('error');status.textContent=t('dirty');node.graph?.change();}
- function refreshOutput(){output.replaceChildren(...cfg.modes.map(m=>new Option(words.en[m],m)));output.value=cfg.output;}
+ function refreshOutput(){output.replaceChildren(...cfg.modes.map(m=>new Option(words.en[m],m)));output.value=cfg.output;for(const[mode,group]of Object.entries(modeGroups))group.hidden=!cfg.modes.includes(mode);}
  function reloadFields(){for(const[key,input]of Object.entries(inputs)){if(input.type==='checkbox')input.checked=cfg[key];else input.value=cfg[key];}for(const[key,input]of Object.entries(modeInputs))input.checked=cfg.modes.includes(key);refreshOutput();}
  function refreshPresets(){preset.replaceChildren(new Option(t('presets'),''));for(const name of Object.keys(node.properties.vcs_presets||{}))preset.add(new Option(name,name));}
  save.onclick=()=>{const name=presetName.value.trim();if(!name)return;node.properties.vcs_presets={...node.properties.vcs_presets,[name]:structuredClone({...cfg,test:false})};refreshPresets();preset.value=name;node.graph?.change();};
@@ -77,14 +87,14 @@ function install(node){
  language.onchange=()=>{lang=language.value;node.properties.vcs_language=lang;for(const[el,key,attr]of labeled){if(attr)el.setAttribute(attr,t(key));else el.textContent=t(key);}refreshOutput();refreshPresets();if(manifest){const av=a.value,bv=b.value;a.replaceChildren(...Object.keys(manifest.streams).map(k=>new Option(t(k),k)));b.replaceChildren(...Object.keys(manifest.streams).map(k=>new Option(t(k),k)));a.value=av;b.value=bv;}status.textContent=manifest?.test?t('single'):manifest?`${manifest.width} × ${manifest.height} · ${manifest.fps.toFixed(3)} FPS · ${manifest.count} frames`:t('empty');draw();node.graph?.change();};
  root.addEventListener('pointerdown',e=>e.stopPropagation());root.addEventListener('keydown',e=>e.stopPropagation());root.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});
  const content=element('div','vcs-content');content.append(...root.childNodes);root.append(content);
- const contentHeight=()=>content.offsetHeight?Math.ceil(content.offsetHeight+28):1300;
+ const contentHeight=()=>content.offsetHeight?Math.ceil(content.offsetHeight+28):900;
  const widget=node.addDOMWidget('vcs_editor','VCS_'+crypto.randomUUID(),root,{serialize:false,hideOnZoom:false,getMinHeight:contentHeight});widget.serialize=false;
  function minimumSize(){return [640,Math.max(node.computeSize()[1],contentHeight()+170)];}
  let sizingFrame=0;
  function fitContents(){cancelAnimationFrame(sizingFrame);sizingFrame=requestAnimationFrame(()=>{if(disposed||!root.isConnected)return;const [w,h]=minimumSize();if(node.size[0]<w||node.size[1]<h){node.setSize([Math.max(w,node.size[0]),Math.max(h,node.size[1])]);node.graph?.setDirtyCanvas(true,true);}});}
  const oldResize=node.onResize;node.onResize=function(size){oldResize?.call(this,size);const [w,h]=minimumSize();size[0]=Math.max(w,size[0]);size[1]=Math.max(h,size[1]);fitContents();};
  const observer=new ResizeObserver(fitContents);observer.observe(content);
- node.setSize([Math.max(640,node.size[0]),Math.max(1470,node.size[1])]);
+ node.setSize([Math.max(640,node.size[0]),Math.max(1070,node.size[1])]);
  play.disabled=true;seek.disabled=true;
  const oldExecuted=node.onExecuted;node.onExecuted=function(data){oldExecuted?.call(this,data);const result=data.vcs?.[0];if(!result)return;playing=false;cancelAnimationFrame(raf);play.textContent='▶';manifest=result;cache.clear();frame=0;seek.max=manifest.count-1;play.disabled=seek.disabled=manifest.count<2;for(const sel of [a,b])sel.replaceChildren(...Object.keys(manifest.streams).map(k=>new Option(t(k),k)));a.value='original';b.value=manifest.output;markIn.disabled=markOut.disabled=manifest.test;status.classList.remove('error');status.textContent=manifest.test?t('single'):`${manifest.width} × ${manifest.height} · ${manifest.fps.toFixed(3)} FPS · ${manifest.count} frames`;draw();};
  const oldConfigure=node.onConfigure;node.onConfigure=function(...args){const r=oldConfigure?.apply(this,args);lang=(this.properties.vcs_language||DEFAULT_LANGUAGE)==='ko'?'ko':'en';language.value=lang;reload();language.onchange();return r;};
