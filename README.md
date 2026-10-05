@@ -2,7 +2,7 @@
 
 [한국어 안내](README.ko.md)
 
-Prepare control videos inside ComfyUI: select Pose, Depth or Canny, extract a short segment, then inspect the same frame with a draggable A/B divider. English is the default; choose **한국어** in the node to switch languages.
+Prepare control videos inside ComfyUI: select Pose, Depth or Canny, extract a short segment, then inspect the same frame with a draggable A/B divider. 
 
 ![Synchronized three-second Pose, Depth and Canny comparison](docs/control-comparison.gif)
 
