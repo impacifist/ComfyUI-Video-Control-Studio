@@ -3,3 +3,4 @@ __pycache__/
 .pytest_cache/
 *.safetensors
 *.mp4
+!docs/control-comparison.mp4
